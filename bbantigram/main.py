@@ -18,27 +18,35 @@ autocontrol = None
 
 # checks if antigen is heterozygous or homozygous
 def is_double_dose(antigen, row):
+    other = None
     for pair in DOUBLE_DOSE:
         if antigen in pair:
             if pair[0] == antigen:
                 other = pair[1]
             else:
-                other = pair[1]
+                other = pair[0]
             break
-    i1 = ANTIGENS.index[antigen]
-    i2 = ANTIGENS.index[other]
+    
+    # antigen is not one of antigens in DOUBLE_DOSE list
+    if other is None:
+        return False
+    else: # antigen is part of DOUBLE_DOSE
+        i1 = ANTIGENS.index(antigen)
+        i2 = ANTIGENS.index(other)
 
-    global panel
-    if panel[row][i1] == '+' and panel[row][i2] == '+':
-        return True
-    return False
+        global panel
+        if panel[row][i1] == '+' and panel[row][i2] == '+':
+            return True
+        return False
     
         
 
 def initialize_panel():
+    # read excel file to a dataframe
     df = pd.read_excel("Panel1.xlsx")
     print(df)
     global panel 
+    # transform all elements in the matrix to string type
     panel = [[str(x) for x in l] for l in df.to_numpy()]
     print(panel)
 
@@ -51,7 +59,8 @@ def rule_out():
             for j in range(len(ANTIGENS)):
                 antigen = ANTIGENS[j]
                 # only consider antigens not ruled out yet and not present in double dose 
-                if antigen in ab_to_eliminate and (antigen not in DOUBLE_DOSE or not is_double_dose(antigen, i)):
+                print(antigen)
+                if antigen in ab_to_eliminate and not is_double_dose(antigen, i):
                     if panel[i][j] == '+':
                         cross_count[antigen] += 1
                         if cross_count[antigen] >= 2:
